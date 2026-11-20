@@ -59,6 +59,11 @@ if (env.NODE_ENV === 'production') {
   if (env.PROXY_SECRET && env.PROXY_SECRET.length < 32) throw new Error('❌ PROXY_SECRET must be 32+ characters (or leave it unset).');
 }
 
+// links in SMS/emails/order tracking are built from CLIENT_URL — a forgotten value would send customers to localhost
+if (env.NODE_ENV === 'production' && /localhost|127\.0\.0\.1/.test(env.CLIENT_URL)) {
+  console.warn('⚠️  CLIENT_URL still points to localhost — set it to the storefront URL (e.g. https://your-shop.vercel.app) and redeploy.');
+}
+
 // Vercel's file system is read-only and every instance starts empty → the JSON demo store cannot work there
 if (process.env.VERCEL && env.DATA_SOURCE !== 'mongo') {
   throw new Error('❌ On Vercel set DATA_SOURCE=mongo and MONGODB_URI (the in-memory store needs a writable disk).');

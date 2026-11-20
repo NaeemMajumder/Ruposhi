@@ -52,7 +52,8 @@ export const initGateway = async (orderNo: string, phone: string) => {
   const exp = Date.now() + 15 * 60_000;
   const token = `${exp}.${signToken(o.orderNo, amount, exp)}`;
   const qs = new URLSearchParams({ gateway: o.payment.method, order: o.orderNo, amount: String(amount), token });
-  return { gateway: o.payment.method, amount, redirectUrl: `${config.clientUrl}/payment/demo?${qs.toString()}`, demo: true };
+  // relative: the demo gateway page lives on the storefront that asked, whatever its domain (a real gateway returns its own absolute URL)
+  return { gateway: o.payment.method, amount, redirectUrl: `/payment/demo?${qs.toString()}`, demo: true };
 };
 
 export const completeGateway = async (orderNo: string, token: string, outcome: 'success' | 'failed' | 'cancelled') => {
