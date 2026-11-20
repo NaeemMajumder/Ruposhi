@@ -53,6 +53,14 @@ export function Content() {
   const [c, setC] = useState<Cms | null>(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (data) setC(data); }, [data]);
+  // uploading an image only fills the form — nothing is stored until Publish, so make unsaved edits obvious
+  const dirty = !!data && !!c && JSON.stringify(c) !== JSON.stringify(data);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
   if (!c) return <DashboardSk />;
   const save = async () => {
     setBusy(true);
@@ -62,6 +70,16 @@ export function Content() {
   return (
     <div className="pb-20">
       <PageHead title={L('Homepage content', 'হোমপেজ কনটেন্ট')} sub={L('Bilingual. Changes appear on the store within ~60 seconds (ISR).', 'দুই ভাষায়। স্টোরে ~৬০ সেকেন্ডে দেখা যাবে।')} actions={<><a href="/" target="_blank" className="btn-ghost !min-h-10 text-sm">{L('Preview', 'প্রিভিউ')}</a><button onClick={save} disabled={busy} className="btn-primary !min-h-10">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{L('Publish', 'পাবলিশ')}</button></>} />
+      {dirty && (
+        <div className="fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 lg:bottom-6" role="status">
+          <div className="flex animate-scale-in items-center gap-3 rounded-full bg-espresso py-2 pl-5 pr-2 text-sm text-cream shadow-lg">
+            {L('Unsaved changes — not on the store yet', 'পরিবর্তন এখনো সেভ হয়নি — স্টোরে যায়নি')}
+            <button onClick={save} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-1.5 font-semibold text-espresso disabled:opacity-60">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{L('Publish', 'পাবলিশ')}
+            </button>
+          </div>
+        </div>
+      )}
       <Tabs value={tab} onChange={(v) => set({ tab: v === 'hero' ? undefined : v })} tabs={[{ id: 'hero', label: L('Hero slides', 'হিরো') }, { id: 'announce', label: L('Announcement bar', 'ঘোষণা বার') }, { id: 'lookbook', label: L('Lookbook', 'লুকবুক') }, { id: 'testimonials', label: L('Testimonials', 'রিভিউ') }, { id: 'promises', label: L('Promises', 'প্রতিশ্রুতি') }]} />
       <div key={tab} className="animate-page">
         {tab === 'hero' && <ListEditor max={5} items={c.hero} onChange={(hero) => setC({ ...c, hero })} make={() => ({ eyebrow: E(), title: E(), subtitle: E(), cta: E(), href: '/shop', image: '' })} render={(h, s) => (
